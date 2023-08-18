@@ -1,7 +1,7 @@
 var firstName = document.querySelector('#fname');
 var surName = document.querySelector('#lname');
 var signupEmail = document.querySelector('#email');
-var phoneNum = document.querySelector('#phoneNum');
+var phnNum = document.querySelector('#phoneNum');
 var signUpPass = document.querySelector('#signUpPass');
 var signUpBtn = document.querySelector('.signupBtn');
 var hidden = document.querySelector('.hidden');
@@ -64,8 +64,8 @@ async function addUserData(uid) {
         surName: surName.value,
         dob: `${dayValue} ${monthValue}, ${yearValue}`,
         email: signupEmail.value,
-        phNum: phoneNum.value,
-        gender: gender.value
+        phoneNum: phnNum.value,
+        gender: gender
     });
 
     window.location.href = '../loginpage/index.html';

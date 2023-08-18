@@ -1,15 +1,8 @@
 var loginEmail = document.getElementById('emailField')
 var loginPassword = document.getElementById('passwordField')
 var loginBtn = document.querySelector('.loginBtn')
-// var firstName = document.querySelector('#fname')
-// var surName = document.querySelector('#lname')
-// var signupEmail = document.querySelector('#phoneNum')
-// var signUpPass = document.querySelector('#signUpPass')
-// var signUpBtn = document.querySelector('.signupBtn')
 
 import { auth, app, getAuth, signInWithEmailAndPassword} from '../firebaseconfig.js'
-
-
 
 
 var overlay = document.querySelector('.overlay')
@@ -43,6 +36,11 @@ async function loginHandler () {
       console.log(errorMessage);
     });
 }
+
+
+
+
+
 
 // function loginHandler() {
 //     console.log(loginEmail.value)

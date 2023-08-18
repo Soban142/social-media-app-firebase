@@ -85,3 +85,88 @@ i{
 .logoutBtn:hover{
     background-color: rgba(96, 96, 179, 1);
 }
+
+figcaption{
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+.fa-linkedin{
+    color: #0a66c2;
+    font-size: 2rem;
+}
+
+i{
+    color: #3a4535;
+    font-size: 1.5rem;
+}
+
+.logoutBtn{
+    background-color: transparent;
+    padding: 0.4em;
+    border-radius: 10px;
+    border: none;
+    background-color: rgba(96, 96, 179, 0.8);
+    color: white;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 500ms ease;
+}
+
+.logoutBtn:hover{
+    background-color: rgba(96, 96, 179, 1);
+}
+
+.main{
+    grid-area: main;
+}   
+
+.usersArea{
+    display: flex;
+    gap: 1rem;
+}
+
+.sideBar{
+    /* background-color: white; */
+    /* grid-area: sideBar;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    align-self: self-start; */
+    padding: 1em 1em;
+    border: 2px solid red;
+    border-radius: 10px;
+    margin-top: 1rem;
+}
+
+#userImage{
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+}
+
+.personData{
+    font-weight: 600;
+    font-size: 1rem;
+    margin-top: 0.5rem;
+}
+
+.userPostImg{
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+}
+
+.un-followBtn{
+    cursor: pointer;
+    padding: 0.3em 0.8em;
+    font-size: 1rem;
+}
+
+
+
+
+.hidden{
+    display: none;
+}

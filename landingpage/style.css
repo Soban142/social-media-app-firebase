@@ -101,6 +101,7 @@ i{
     padding: 1em 0.3em;
     position: sticky;
     top: 0;
+    z-index: 3;
 }
 
 #userImage{
@@ -156,6 +157,12 @@ i{
 
 .authorDetails{
     display: flex;
+    justify-content: space-between;
+}
+
+.postUpperDiv{
+    display: flex;
+    gap: 0.5em;
 }
 
 .postData{
@@ -167,7 +174,6 @@ i{
     font-size: 1rem;
     font-weight: 700;
 }
-
 
 .postContent{
     margin-top: 0.8rem;
@@ -190,6 +196,7 @@ i{
     padding: 2em;
     box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
     border-radius: 1rem;
+    z-index: 5;
 }
 
 .postBox h3{
@@ -202,6 +209,7 @@ i{
     margin-top: 0.5rem;
     font-size: 1rem;
     font-weight: 500;
+    padding: 0.5em 0.5em;
 }
 
 .postBtn{
@@ -231,6 +239,7 @@ i{
     bottom: 0;
     width: 100%;
     height: 100vh;
+    z-index: 4;
 }
 
 .hidden{

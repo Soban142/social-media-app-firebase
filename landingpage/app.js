@@ -1,115 +1,294 @@
 // var isLoggedInUser = JSON.parse(localStorage.getItem('isloggedUser'))
 // console.log(isLoggedInUser)
 
-var userName = document.getElementById('userName');
-var userEmail = document.getElementById('userEmail');
-var userGender = document.getElementById('userGender');
-var userDescription = document.getElementById('userDescription');
-var logOutBtn = document.querySelector('.logoutBtn');
-var myProfile = document.querySelector('.myProfile');
+const userName = document.getElementById('userName');
+const userEmail = document.getElementById('userEmail');
+const phnNum = document.getElementById('userContactNo');
+const userGender = document.getElementById('userGender');
+const userDescription = document.getElementById('userDescription');
+const userImage = document.getElementById('userImage');
+const logOutBtn = document.querySelector('.logoutBtn');
+const myProfile = document.querySelector('.myProfile');
+const userPostingImg = document.querySelector('.userPostingImg')
 
 // Getting elements for creation of a post.
-var hidden = document.querySelector('.hidden');
+const hidden = document.querySelector('.hidden');
 const overlay = document.querySelector('.overlay')
-var creationOfPost =  document.querySelector('.postField');
-var postDescription = document.querySelector('.postCaption')
+const creationOfPost =  document.querySelector('.postField');
+const postDescription = document.querySelector('.postCaption');
+const uploadPostImg = document.querySelector('#uploadPostImg')
 const postBtn = document.querySelector('.postBtn');
 const postBox = document.querySelector('.postBox');
 const postDiv = document.querySelector('.postDiv');
 
 
-import { getAuth, getFirestore, auth, db, doc, getDoc, onAuthStateChanged, signOut, setDoc, addDoc, collection, query, getDocs } from "../firebaseconfig.js";
+import { getAuth, getFirestore, auth, db, doc, getDoc, onAuthStateChanged, signOut, setDoc, addDoc, collection, query, getDocs, ref, uploadBytesResumable, getDownloadURL, storage, updateDoc, deleteDoc, serverTimestamp, orderBy } from "../firebaseconfig.js";
+
+console.log(serverTimestamp, "==>>>serverTimestamp")
 
 let currentUser;
 
+addPostData()
+
+let postIdUniversal;
+
 onAuthStateChanged(auth, (user) => {
-    if (user) {
-      const uniqueIdOfCurrentData = user.uid;
-        addUserData(uniqueIdOfCurrentData);
-        currentUser = uniqueIdOfCurrentData;
-    } else {
-        window.location.href = '../loginpage/index.html'
-    }
-  });
-
-
-async function addUserData(uid) {
-    try{
-        const docRef = await doc(db, "users", uid);
-        const docSnap = await getDoc(docRef);
-
-        if (docSnap.exists()) {
-            console.log("Document data:", docSnap.data());
-            const userData = docSnap.data();
-
-            let {dob, email, firstName, gender, Surname} = docSnap.data();
-
-            userName.textContent = `${firstName} ${Surname}`
-            userEmail.textContent = email;
-            userDescription.textContent = userData.userDescription || "No description added";
-            userGender = gender;
-
+        if (user) {
+            const uniqueIdOfCurrentData = user.uid;
+            addUserData(uniqueIdOfCurrentData);
+            currentUser = uniqueIdOfCurrentData;
         } else {
-            console.log("No such document!");
+            window.location.href = '../loginpage/index.html'
         }
-    } catch (error){
-        console.log(error)
+    });
+
+
+    async function addUserData(uid) {
+        try{
+            const docRef = await doc(db, "users", uid);
+            const docSnap = await getDoc(docRef);
+
+            if (docSnap.exists()) {
+                console.log("Document data:", docSnap.data());
+                const userData = docSnap.data();
+
+                let {dob, email, firstName, gender, surName, phoneNum, profilePic} = docSnap.data();
+                console.log(surName)
+                userName.textContent = `${firstName} ${surName}`;
+                userEmail.textContent = email;
+                phnNum.textContent = phoneNum;
+                userImage.src = `${profilePic || '../assests/avatarDummy.png'}`,
+                userDescription.textContent = userData.userDescription || "No description added";
+                userGender.textContent = gender;
+                userPostingImg.src = `${profilePic || '../assests/avatarDummy.png'}`
+
+            } else {
+                console.log("No such document!");
+            }
+        } catch (error){
+            console.log(error)
+        }
     }
-}
 
-creationOfPost.addEventListener('click', postCreator);
-postBtn.addEventListener('click', postHandler)
+    creationOfPost.addEventListener('click', postCreator);
+    postBtn.addEventListener('click', postHandler)
 
-function postCreator () {
-    postBox.classList.remove('hidden');
-    overlay.classList.remove('hidden');
-} 
+    overlay.addEventListener('click', () => {
+        postBox.classList.add('hidden');
+        overlay.classList.add('hidden');
+    })
+
+    function postCreator () {
+        postBox.classList.remove('hidden');
+        overlay.classList.remove('hidden');
+
+        // postDescription.disabled = true;
+        postDescription.focus()
+    } 
 
 async function postHandler() {
     postBox.classList.add('hidden');
     overlay.classList.add('hidden');
 
-    try {
-        const docRef = await addDoc(collection(db, "posts"), {
-            postCaption: postDescription.value,
-            authorId : currentUser
-        });
-        addPostData(currentUser)
+    
+    /** @type {any} */
+    const metadata = {
+        contentType: 'image/jpeg'
+    };
 
-        console.log("Document written with ID: ", docRef.id);
-      } catch (e) {
-        console.error("Error adding document: ", e);
-      }
+    const file = uploadPostImg.files[0];
+    console.log(file)
+
+    // Upload file and metadata to the object 'images/mountains.jpg'
+    const storageRef = ref(storage, 'images/' + file.name);
+    const uploadTask = uploadBytesResumable(storageRef, file, metadata);
+
+    uploadTask.on('state_changed',
+    (snapshot) => {
+        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+        console.log('Upload is ' + progress + '% done');
+        switch (snapshot.state) {
+        case 'paused':
+            console.log('Upload is paused');
+            break;
+        case 'running':
+            console.log('Upload is running');
+            break;
+        }
+    }, 
+    (error) => {
+        
+        switch (error.code) {
+        case 'storage/unauthorized':
+            // User doesn't have permission to access the object
+            break;
+        case 'storage/canceled':
+            // User canceled the upload
+            break;
+        case 'storage/unknown':
+            // Unknown error occurred, inspect error.serverResponse
+            break;
+        }
+    }, 
+    () => {
+        getDownloadURL(uploadTask.snapshot.ref).then(async (downloadURL) => {
+        console.log('File available at', downloadURL);
+            try {
+                 const docRef = await addDoc(collection(db, "posts"), {
+                     postCaption: postDescription.value,
+                     authorId : currentUser,
+                     postImage : downloadURL,
+                     postTime: serverTimestamp()
+            });
+                 addPostData(currentUser)
+
+                console.log("Document written with ID: ", docRef.id);
+                postId = docRef.id;
+          } catch (e) {
+                console.error("Error adding document: ", e);
+          }
+        });
+    }
+);
 }
 
+async function updatePostHandler() {
+    postBox.classList.add('hidden');
+    overlay.classList.add('hidden');
+
+    // Create the file metadata
+    /** @type {any} */
+    const metadata = {
+        contentType: 'image/jpeg'
+    };
+  
+    const file = uploadPostImg.files[0];
+  // Upload file and metadata to the object 'images/mountains.jpg'
+    const storageRef = ref(storage, 'images/' + file.name);
+    const uploadTask = uploadBytesResumable(storageRef, file, metadata);
+  
+  // Listen for state changes, errors, and completion of the upload.
+  uploadTask.on('state_changed',
+    (snapshot) => {
+      // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
+      const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+      console.log('Upload is ' + progress + '% done');
+      switch (snapshot.state) {
+        case 'paused':
+          console.log('Upload is paused');
+          break;
+        case 'running':
+          console.log('Upload is running');
+          break;
+      }
+    }, 
+    (error) => {
+      // A full list of error codes is available at
+      // https://firebase.google.com/docs/storage/web/handle-errors
+      switch (error.code) {
+        case 'storage/unauthorized':
+          // User doesn't have permission to access the object
+          break;
+        case 'storage/canceled':
+          // User canceled the upload
+          break;
+  
+        // ...
+  
+        case 'storage/unknown':
+          // Unknown error occurred, inspect error.serverResponse
+          break;
+      }
+    }, 
+    () => {
+      // Upload completed successfully, now we can get the download URL
+      getDownloadURL(uploadTask.snapshot.ref).then(async (downloadURL) => {
+        console.log('File available at', downloadURL);
+        const washingtonRef = doc(db, "posts", postIdUniversal);
+        try {
+            await updateDoc(washingtonRef, {
+                postCaption: postDescription.value,
+                authorId : currentUser,
+                postImage : downloadURL,
+                postTime: serverTimestamp()
+            });
+            addPostData();
+        } catch (error) {
+            console.log(error)
+        }
+      });
+    }
+  );
+    postBtn.adaEventListener('click', postHandler)
+    postBtn.removeEventListener('click', updatePostHandler)
+}
+
+
+function editHandler(postId) {
+    postCreator();
+    console.log('edit handler working')
+    console.log(postId)
+
+    postIdUniversal = postId
+
+    postBtn.removeEventListener('click', postHandler)
+    postBtn.addEventListener('click', updatePostHandler)
+}
+
+async function deleteHandler(postId) {
+    console.log(postId, "delete button working properly")
+
+    await deleteDoc(doc(db, "posts", postId));
+    alert("Your post deleted successfully")
+    addPostData();
+}
 
 async function addPostData(userId) {
 
     postDiv.innerHTML = ''
-    const querySnapshot = await getDocs(collection(db, "posts"));
+
+    const q = query(collection(db, "posts"), orderBy("postTime", "desc"));
+    const querySnapshot = await getDocs(q);
+    // const querySnapshot = await getDocs(collection(db, "posts"));
 
     querySnapshot.forEach(async (doc) => {
         // console.log(doc.data().authorId)
-        console.log(doc.id, '===+', doc.data())
-        let postTime = new Date().getTime()
-        let {authorId, postCaption} = doc.data();
-        
+        // console.log(doc.id, '===>', doc.data());
+        // let postTime = new Date().getTime();
+        let {authorId, postCaption, postImage, postTime} = doc.data();
+        console.log(new Date(postTime.seconds * 1000))
+        console.log(postTime)
         const authorDetails = await getAuthorData(authorId);
 
-        var postContent = `<div class="post">
+        var postContent = 
+        `<div class="post">
             <div class="authorDetails">
-                <img src="../assests/avatarDummy.png" alt="" class="userPostImg">
-                <div class="">
-                    <div class="postData postUserName">${authorDetails?.firstName} ${authorDetails?.surName}</div>
-                    <div class="postData postUserDesc">${authorDetails.userDescription || "No description added"}</div>
-                    <div class="postData postTime">${postTime}</div>
-                </div>
+                <div class="postUpperDiv">
+                    <div>
+                        <img src="${authorDetails.profilePic || '../assests/avatarDummy.png'}" alt="" class="userPostImg">
+                    </div>
+                    <div>
+                        <div class="postData postUserName">${authorDetails?.firstName} ${authorDetails?.surName}</div>
+                        <div class="postData postUserDesc">${authorDetails.userDescription || "No description added"}</div>
+                        <div class="postData postTime">${new Date(postTime.seconds * 1000)}</div>
+                    </div>
+                </div>${authorId === currentUser ? `<div class="dropdown">
+                <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    :
+                </button>
+                <ul class="dropdown-menu">
+                    <div>
+                        <li><button class="dropdown-item" type="button" onClick="editHandler('${doc.id}')">Edit</button></li>
+                        <li><button class="dropdown-item" type="button" onClick="deleteHandler('${doc.id}')">Delete </button></li>
+                    </div>
+                </ul>
+            </div>` : ''}        
             </div>
-                <div class="postCaption">${postCaption}</div>
-                <div>
-                    <img src="../assests/dummyPostImage.jpg" alt="" id="postImage">
-                </div>
-            </div>`;
+            <div class="postCaption">${postCaption}</div>
+            <div>
+                <img src="${postImage || '../assests/dummyPostImage.jpg'}" alt="" id="postImage">
+            </div>
+        </div>`;
 
         var postParent = document.createElement('div');
         postParent.innerHTML = postContent;
@@ -141,12 +320,8 @@ function logoutHandler() {
 }
 
 
-
-
-
-
-
-
+window.editHandler = editHandler;
+window.deleteHandler = deleteHandler;
 
 
 
